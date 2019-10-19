@@ -4,7 +4,23 @@
 #include "DataManager.h"
 #include "Engine.h"
 #include "CoreUObject.h"
-#include "PersonData.h"
+#include "ImageUtils.h"
+#include "Defs/PersonData.h"
+#include "Windows/AllowWindowsPlatformTypes.h"
+#include "windows.h"
+#include "Windows/HideWindowsPlatformTypes.h"
+
+
+bool FMyDirectoryVisitor::Visit(const TCHAR* FilenameOrDirectory, bool bIsDirectory)
+{
+	if (bIsDirectory) {
+		m_DirectoryPaths.Add(FilenameOrDirectory);
+	}
+	else {
+		m_FilePaths.Add(FilenameOrDirectory);
+	}
+	return true;
+}
 
 TSharedPtr<FDataManager> FDataManager::ms_pInstance = nullptr;
 
@@ -33,5 +49,65 @@ TArray<UObject*> FDataManager::GetTestData()
 		newData->m_pPhoto = newData->m_pHeadThumbnail;
 		testDataArray.Add(newData);
 	}
+	GetData(TEXT("2016"));
 	return testDataArray;
+}
+
+TArray<UObject*> FDataManager::GetData(const TCHAR* szYear)
+{
+	TArray<UObject*> personDataArray;
+	FString strRootDir = FPaths::ProjectDir().Append(TEXT("Root/"));
+	strRootDir.Append(szYear);
+	TArray<FString> directoriesToSkip;
+	IPlatformFile& platformFile = FPlatformFileManager::Get().GetPlatformFile();
+	FMyDirectoryVisitor myVisitor;
+	if (platformFile.IterateDirectory(*strRootDir, myVisitor)) {
+		for(const FString& strDirectory:myVisitor.m_DirectoryPaths) {
+			FMyDirectoryVisitor personVisitor;
+			UPersonData* newData = NewObject<UPersonData>();
+			newData->m_strDirectoryName = strDirectory;
+			FString strDiectoryName;
+			strDirectory.Split(TEXT("/"), nullptr, &strDiectoryName, ESearchCase::IgnoreCase, ESearchDir::FromEnd);
+			strDiectoryName.Split(TEXT("_"), &newData->m_strIndex, &newData->m_strName);
+			newData->m_strName.Split(TEXT("_"), &newData->m_strName, &newData->m_strSearchKey);
+			if (platformFile.IterateDirectory(*strDirectory, personVisitor))
+			{
+				for (const FString& strFilePath : personVisitor.m_FilePaths) {
+					FString strFileName;
+					strFilePath.Split(TEXT("/"), nullptr, &strFileName, ESearchCase::IgnoreCase, ESearchDir::FromEnd);
+					UE_LOG(LogTemp, Log, TEXT("ls->%s"), *strFileName);
+					if (strFileName.EndsWith(TEXT(".txt"), ESearchCase::IgnoreCase)) {
+						TArray<uint8> buffer;
+						FFileHelper::LoadFileToArray(buffer, *strFilePath);
+						newData->m_strDescription = GB2312_TO_UTF8(buffer);
+					}
+					else if (strFileName.EndsWith(TEXT(".jpg"), ESearchCase::IgnoreCase)
+						|| strFileName.EndsWith(TEXT(".jpeg"), ESearchCase::IgnoreCase)) {
+						if (strFileName.Contains(TEXT("small"))) {
+							newData->m_pHeadThumbnail = FImageUtils::ImportFileAsTexture2D(strFilePath);
+						}
+						else {
+							newData->m_strLocalPhotoPath = strFilePath;
+							//newData->m_pPhoto = FImageUtils::ImportFileAsTexture2D(strFilePath);
+						}
+					}
+					else if (strFileName.EndsWith(TEXT(".mp4"), ESearchCase::IgnoreCase)) {
+						newData->m_strLocalVideoPath = strFilePath;
+					}
+				}
+			}
+			personDataArray.Add(newData);
+		}
+	}
+	return personDataArray;
+}
+
+FString FDataManager::GB2312_TO_UTF8(const TArray<uint8>& szGB2312)
+{
+	int32 nWCHARNum = MultiByteToWideChar(CP_ACP, 0, (const ANSICHAR*)szGB2312.GetData(), -1, NULL, 0);
+	TCHAR* dstBuffer = new TCHAR[nWCHARNum];
+	MultiByteToWideChar(CP_ACP, 0, (const ANSICHAR*)szGB2312.GetData(), szGB2312.Num(), dstBuffer, nWCHARNum);
+	FString strResult(dstBuffer);
+	delete[] dstBuffer;
+	return strResult;
 }

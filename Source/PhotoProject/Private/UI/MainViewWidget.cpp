@@ -8,12 +8,12 @@
 
 void UMainViewWidget::NativeConstruct()
 {
-	TArray<UObject*> testDataArray = FDataManager::GetInstance().GetTestData();
-	LoopView1->InitData(testDataArray);
+	TArray<UObject*> dataArray1 = FDataManager::GetInstance().GetData(TEXT("2011"));
+	LoopView1->InitData(dataArray1);
 	LoopView1->BeginLoop(1.0f);
-	LoopView2->InitData(testDataArray);
+	LoopView2->InitData(dataArray1);
 	LoopView2->BeginLoop(1.0f);
-	LoopView3->InitData(testDataArray);
+	LoopView3->InitData(dataArray1);
 	LoopView3->BeginLoop(1.0f);
 	Super::NativeConstruct();
 }

@@ -68,7 +68,13 @@ void ULoopViewWidget::MoveLayoutFirstToEnd()
 				}
 			}
 			nDataIndex += pChild->m_nColIndex;
-			pChild->InitData(nDataIndex, m_DataArray[nDataIndex]);
+			if (nDataIndex < m_DataArray.Num()) {
+				pChild->SetVisible(true);
+				pChild->InitData(nDataIndex, m_DataArray[nDataIndex]);
+			}
+			else {
+				pChild->SetVisible(false);
+			}
 		}
 		FVector2D newPosition = pChildSlot->GetPosition();
 		newPosition.Y = m_ChildSize.Y*(pChild->m_nRowIndex);

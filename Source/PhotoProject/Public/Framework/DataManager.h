@@ -26,7 +26,11 @@ private:
 	FDataManager(const FDataManager&) {};
 public:
 	TArray<UObject*> GetTestData();
-	TArray<UObject*> GetData(const TCHAR* szYear);
+	TArray<UObject*> GetData(const FString& strYear);
+	void LoadAllData();
+private:
+	TArray<UObject*> LoadData(const TCHAR* szYear);
 private:
 	FString GB2312_TO_UTF8(const TArray<uint8>& strGB2312);
+	TMap<FString, TArray<UObject*>> m_DataMap;
 };

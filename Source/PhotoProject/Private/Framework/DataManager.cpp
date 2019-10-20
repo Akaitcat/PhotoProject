@@ -49,11 +49,29 @@ TArray<UObject*> FDataManager::GetTestData()
 		newData->m_pPhoto = newData->m_pHeadThumbnail;
 		testDataArray.Add(newData);
 	}
-	GetData(TEXT("2016"));
+	LoadData(TEXT("2016"));
 	return testDataArray;
 }
 
-TArray<UObject*> FDataManager::GetData(const TCHAR* szYear)
+TArray<UObject*> FDataManager::GetData(const FString& strYear)
+{
+	if (TArray<UObject*>* result = m_DataMap.Find(strYear)) {
+		return *result;
+	}
+	else {
+		return {};
+	}
+}
+
+void FDataManager::LoadAllData()
+{
+	m_DataMap.Add(TEXT("2006"), LoadData(TEXT("2006")));
+	m_DataMap.Add(TEXT("2011"), LoadData(TEXT("2011")));
+	m_DataMap.Add(TEXT("2016"), LoadData(TEXT("2016")));
+	m_DataMap.Add(TEXT("2020"), LoadData(TEXT("2020")));
+}
+
+TArray<UObject*> FDataManager::LoadData(const TCHAR* szYear)
 {
 	TArray<UObject*> personDataArray;
 	FString strRootDir = FPaths::ProjectDir().Append(TEXT("Root/"));
@@ -75,7 +93,6 @@ TArray<UObject*> FDataManager::GetData(const TCHAR* szYear)
 				for (const FString& strFilePath : personVisitor.m_FilePaths) {
 					FString strFileName;
 					strFilePath.Split(TEXT("/"), nullptr, &strFileName, ESearchCase::IgnoreCase, ESearchDir::FromEnd);
-					UE_LOG(LogTemp, Log, TEXT("ls->%s"), *strFileName);
 					if (strFileName.EndsWith(TEXT(".txt"), ESearchCase::IgnoreCase)) {
 						TArray<uint8> buffer;
 						FFileHelper::LoadFileToArray(buffer, *strFilePath);

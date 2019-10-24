@@ -96,6 +96,8 @@ TArray<UObject*> FDataManager::LoadData(const TCHAR* szYear)
 					if (strFileName.EndsWith(TEXT(".txt"), ESearchCase::IgnoreCase)) {
 						TArray<uint8> buffer;
 						FFileHelper::LoadFileToArray(buffer, *strFilePath);
+						buffer.AddZeroed(1);
+						UE_LOG(LogTemp,Log,TEXT("strDiectoryName:%s"), *newData->m_strIndex);
 						newData->m_strDescription = GB2312_TO_UTF8(buffer);
 					}
 					else if (strFileName.EndsWith(TEXT(".jpg"), ESearchCase::IgnoreCase)
@@ -124,7 +126,7 @@ FString FDataManager::GB2312_TO_UTF8(const TArray<uint8>& szGB2312)
 	int32 nWCHARNum = MultiByteToWideChar(CP_ACP, 0, (const ANSICHAR*)szGB2312.GetData(), -1, NULL, 0);
 	TCHAR* dstBuffer = new TCHAR[nWCHARNum+1];
 	FPlatformMemory::Memzero(dstBuffer, sizeof(TCHAR)*(nWCHARNum + 1));
-	MultiByteToWideChar(CP_ACP, 0, (const ANSICHAR*)szGB2312.GetData(), szGB2312.Num(), dstBuffer, nWCHARNum);
+	nWCHARNum = MultiByteToWideChar(CP_ACP, 0, (const ANSICHAR*)szGB2312.GetData(), szGB2312.Num(), dstBuffer, nWCHARNum);
 	FString strResult(dstBuffer);
 	delete[] dstBuffer;
 	return strResult;

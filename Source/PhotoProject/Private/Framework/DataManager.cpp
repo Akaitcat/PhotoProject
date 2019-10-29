@@ -86,8 +86,8 @@ TArray<UObject*> FDataManager::LoadData(const TCHAR* szYear)
 			newData->m_strDirectoryName = strDirectory;
 			FString strDiectoryName;
 			strDirectory.Split(TEXT("/"), nullptr, &strDiectoryName, ESearchCase::IgnoreCase, ESearchDir::FromEnd);
-			strDiectoryName.Split(TEXT("_"), &newData->m_strIndex, &newData->m_strName);
-			newData->m_strName.Split(TEXT("_"), &newData->m_strName, &newData->m_strSearchKey);
+			strDiectoryName.Split(TEXT("_"), &newData->m_strIndex, &strDiectoryName);
+			strDiectoryName.Split(TEXT("_"), &newData->m_strName, &newData->m_strSearchKey);
 			if (platformFile.IterateDirectory(*strDirectory, personVisitor))
 			{
 				for (const FString& strFilePath : personVisitor.m_FilePaths) {

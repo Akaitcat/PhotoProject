@@ -32,4 +32,9 @@ public:
 	FString m_strDescription;
 	UPROPERTY(BlueprintReadWrite, Category = "PersonData")
 	FString m_strSearchKey;
+
+	bool operator == (const UPersonData& other)
+	{
+		return m_strLocalPhotoPath == other.m_strLocalPhotoPath;
+	}
 };

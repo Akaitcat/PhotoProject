@@ -118,6 +118,7 @@ TArray<UObject*> FDataManager::LoadData(const TCHAR* szYear)
 			personDataArray.Add(newData);
 		}
 	}
+	personDataArray.Sort();
 	return personDataArray;
 }
 

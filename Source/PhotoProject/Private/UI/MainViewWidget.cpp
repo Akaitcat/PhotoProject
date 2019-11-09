@@ -8,6 +8,7 @@
 
 void UMainViewWidget::NativeConstruct()
 {
+
 	TArray<UObject*> dataArray1 = FDataManager::GetInstance().GetData(TEXT("2006"));
 	TArray<UObject*> dataArray2 = FDataManager::GetInstance().GetData(TEXT("2011"));
 	TArray<UObject*> dataArray3 = FDataManager::GetInstance().GetData(TEXT("2016"));

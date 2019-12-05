@@ -15,6 +15,10 @@ class PHOTOPROJECT_API UMainViewWidget : public UUserWidget
 	GENERATED_BODY()
 public:
 	virtual void NativeConstruct() override;
+	virtual void NativeTick(const FGeometry& InGeometry,float fDeltaTime) override;
+protected:
+	UFUNCTION(BlueprintImplementableEvent, Category = "MainViewWidget")
+	void OnIdleOver();
 protected:
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget), Category = "MainViewWidget")
 	class ULoopViewWidget* LoopView1;

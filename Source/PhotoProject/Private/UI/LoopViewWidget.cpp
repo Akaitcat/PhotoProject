@@ -27,8 +27,9 @@ void ULoopViewWidget::InitData(const TArray<UObject*>& dataArray)
 
 void ULoopViewWidget::InitChildrenItems()
 {
-	m_CurrentStartIndex = 0;
+	ContainerPanel->ClearChildren();
 	m_ItemChildren.Empty();
+	m_CurrentStartIndex = 0;
 	int32 nContainerRowNum = FMath::CeilToInt(m_ContainerSize.Y /m_ChildSize.Y);
 	int32 nNecessaryChildrenNum = m_DataArray.Num()>m_ContainerChildNum?(nContainerRowNum + 2)*m_nColumnNum : m_DataArray.Num();
 	for (int32 i = 0; i < nNecessaryChildrenNum; i++) {
@@ -116,6 +117,14 @@ void ULoopViewWidget::UpdateLoop(float fDeltaTime)
 	if (containerPosition.Y < -m_ChildSize.Y) {
 		containerPosition.Y = containerPosition.Y + m_ChildSize.Y;
 		MoveLayoutFirstToEnd();
+	}
+	// 更新第一排的透明度
+	float fNewOpacity = FMath::Cos(containerPosition.Y / m_ChildSize.Y * 0.5f * PI);
+	fNewOpacity = fNewOpacity * fNewOpacity;
+	for (auto pChild : m_ItemChildren) {
+		if (pChild->m_nRowIndex == 0) {
+			pChild->SetRenderOpacity(fNewOpacity);
+		}
 	}
 	pContainerSlot->SetPosition(containerPosition);
 }

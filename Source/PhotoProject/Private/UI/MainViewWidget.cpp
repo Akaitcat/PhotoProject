@@ -3,6 +3,7 @@
 #include "MainViewWidget.h"
 #include "DataManager.h"
 #include "LoopViewWidget.h"
+#include "SlateBasics.h"
 
 
 
@@ -22,4 +23,15 @@ void UMainViewWidget::NativeConstruct()
 	LoopView4->InitData(dataArray4);
 	LoopView4->BeginLoop(1.0f);
 	Super::NativeConstruct();
+}
+
+void UMainViewWidget::NativeTick(const FGeometry& InGeometry, float fDeltaTime)
+{
+	Super::NativeTick(InGeometry, fDeltaTime);
+	if (GetVisibility() != ESlateVisibility::Collapsed&& GetVisibility() != ESlateVisibility::Hidden) {
+		double delta = FSlateApplication::Get().GetCurrentTime() - FSlateApplication::Get().GetLastUserInteractionTime();
+		if (delta > 180) {
+			OnIdleOver();
+		}
+	}
 }

@@ -22,10 +22,4 @@ protected:
 protected:
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget), Category = "MainViewWidget")
 	class ULoopViewWidget* LoopView1;
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget), Category = "MainViewWidget")
-	class ULoopViewWidget* LoopView2;
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget), Category = "MainViewWidget")
-	class ULoopViewWidget* LoopView3;
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget), Category = "MainViewWidget")
-	class ULoopViewWidget* LoopView4;
 };

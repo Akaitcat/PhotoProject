@@ -63,6 +63,16 @@ TArray<UObject*> FDataManager::GetData(const FString& strYear)
 	}
 }
 
+TArray<UObject*> FDataManager::GetAllData()
+{
+	TArray<UObject*> allDataArray;
+	allDataArray.Append(GetData("2006"));
+	allDataArray.Append(GetData("2011"));
+	allDataArray.Append(GetData("2016"));
+	allDataArray.Append(GetData("2020"));
+	return allDataArray;
+}
+
 void FDataManager::LoadAllData()
 {
 	m_DataMap.Add(TEXT("2006"), LoadData(TEXT("2006")));

@@ -27,6 +27,7 @@ private:
 public:
 	TArray<UObject*> GetTestData();
 	TArray<UObject*> GetData(const FString& strYear);
+	TArray<UObject*> GetAllData();
 	void LoadAllData();
 private:
 	TArray<UObject*> LoadData(const TCHAR* szYear);

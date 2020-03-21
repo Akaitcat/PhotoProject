@@ -4,6 +4,7 @@
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
 #include "LoopViewItemWidget.h"
+#include "Defs/PersonData.h"
 DEFINE_STAT(STAT_LoopViewWidget_UpdateLoop);
 
 bool ULoopViewWidget::Initialize()
@@ -22,68 +23,65 @@ bool ULoopViewWidget::Initialize()
 void ULoopViewWidget::InitData(const TArray<UObject*>& dataArray)
 {
 	m_DataArray = dataArray;
+	m_nCurrentDataIndex = 0;
 	InitChildrenItems();
-}
+	// ResetAppearance
+	UCanvasPanelSlot* pContainerSlot = Cast<UCanvasPanelSlot>(ContainerPanel->Slot);
+	if (pContainerSlot) {
+		pContainerSlot->SetPosition(FVector2D(0,0));
+	}
+	}
 
 void ULoopViewWidget::InitChildrenItems()
 {
 	ContainerPanel->ClearChildren();
-	m_ItemChildren.Empty();
-	m_CurrentStartIndex = 0;
-	int32 nContainerRowNum = FMath::CeilToInt(m_ContainerSize.Y /m_ChildSize.Y);
-	int32 nNecessaryChildrenNum = m_DataArray.Num()>m_ContainerChildNum?(nContainerRowNum + 2)*m_nColumnNum : m_DataArray.Num();
-	for (int32 i = 0; i < nNecessaryChildrenNum; i++) {
-		ULoopViewItemWidget* pItem = CreateChild();
-		UCanvasPanelSlot* pChildSlot = Cast<UCanvasPanelSlot>(pItem->Slot);
-		m_ItemChildren.Add(pItem);
-		// 最后面两列用于无缝滚动
-		pItem->m_nRowIndex = i / m_nColumnNum;
-		pItem->m_nColIndex = i % m_nColumnNum;
-		if (i < m_DataArray.Num()) {
-			pItem->InitData(i, m_DataArray[i]);
-		}
-		else {
-			pItem->SetVisible(false);
-		}
-		// 初始化位置
-		FVector2D itemPosition;
-		itemPosition.X = pItem->m_nColIndex * m_ChildSize.X;
-		itemPosition.Y = pItem->m_nRowIndex * m_ChildSize.Y;
-		pChildSlot->SetPosition(itemPosition);
+	m_NodeMatrix.Empty();
+	int32 nContainerRowNum = FMath::CeilToInt(m_ContainerSize.Y / m_ChildSize.Y);
+
+	for (int32 i = 0; i < nContainerRowNum + 2; i++) {
+		TArray<int32> newRow;
+		newRow.AddZeroed(m_nColumnNum);
+		m_NodeMatrix.Add(newRow);
 	}
+	FilllMatrix();
 }
 
-void ULoopViewWidget::MoveLayoutFirstToEnd()
+
+void ULoopViewWidget::FilllMatrix()
 {
-	int32 nContainerRowNum = FMath::CeilToInt(m_ContainerSize.Y / m_ChildSize.Y);
-	for (auto pChild : m_ItemChildren) {
-		UCanvasPanelSlot* pChildSlot = Cast<UCanvasPanelSlot>(pChild->Slot);
-		pChild->m_nRowIndex--;
-		if (pChild->m_nRowIndex==-1) {
-			pChild->m_nRowIndex = nContainerRowNum + 1;
-			int32 nDataIndex = m_CurrentStartIndex;
-			for (int32 i = 0; i < nContainerRowNum + 2; i++) {
-				nDataIndex += m_nColumnNum;
-				if (nDataIndex >= m_DataArray.Num()) {
-					nDataIndex = 0;
+	for (int32 nRow = 0; nRow < m_NodeMatrix.Num()-1; nRow++) {
+		for (int32 nCol = 0; nCol < m_NodeMatrix[nRow].Num(); nCol++) {
+			if (m_NodeMatrix[nRow][nCol] == 0) {// 如果有坑位， 则取数据填坑
+				UPersonData* pPersonData = Cast<UPersonData>(m_DataArray[m_nCurrentDataIndex]);
+				check(pPersonData);
+				bool bBigIcon = !pPersonData->m_strLocalVideoPath.IsEmpty();
+				bool bSpaceEnough = false;
+				if(bBigIcon){// 如果是大萝卜, 则占据4个萝卜坑
+					if ((nCol + 1) < m_NodeMatrix[nRow].Num()) {
+						m_NodeMatrix[nRow][nCol] = 2;
+						m_NodeMatrix[nRow][nCol+1] = 2;
+						m_NodeMatrix[nRow+1][nCol] = 2;
+						m_NodeMatrix[nRow+1][nCol+1] = 2;
+						bSpaceEnough = true;
+					}
+					else {// 如果只剩下一列了, 则使当前坑位失效，跳过这个坑
+						m_NodeMatrix[nRow][nCol] = -1;
+					}
+				}
+				else {// 如果是小萝卜，直接填到坑里
+					m_NodeMatrix[nRow][nCol] = 1;
+					bSpaceEnough = true;
+				}
+				if (bSpaceEnough) {
+					ULoopViewItemWidget* pNewItem = CreateChild(nRow, nCol);
+					pNewItem->InitData(m_nCurrentDataIndex, pPersonData);
+					m_nCurrentDataIndex++;
+					if (m_nCurrentDataIndex >= m_DataArray.Num()) {
+						m_nCurrentDataIndex = 0;
+					}
 				}
 			}
-			nDataIndex += pChild->m_nColIndex;
-			if (nDataIndex < m_DataArray.Num()) {
-				pChild->SetVisible(true);
-				pChild->InitData(nDataIndex, m_DataArray[nDataIndex]);
-			}
-			else {
-				pChild->SetVisible(false);
-			}
 		}
-		FVector2D newPosition = pChildSlot->GetPosition();
-		newPosition.Y = m_ChildSize.Y*(pChild->m_nRowIndex);
-		pChildSlot->SetPosition(newPosition);
-	}
-	m_CurrentStartIndex += m_nColumnNum;
-	if (m_CurrentStartIndex >= m_DataArray.Num()) {
-		m_CurrentStartIndex = 0;
 	}
 }
 
@@ -114,17 +112,29 @@ void ULoopViewWidget::UpdateLoop(float fDeltaTime)
 	UCanvasPanelSlot* pContainerSlot = Cast<UCanvasPanelSlot>(ContainerPanel->Slot);
 	FVector2D containerPosition = pContainerSlot->GetPosition();
 	containerPosition.Y -= m_LoopAnimationData.m_fAnimateSpeed;
-	if (containerPosition.Y < -m_ChildSize.Y) {
+	if (containerPosition.Y <= -m_ChildSize.Y) {
 		containerPosition.Y = containerPosition.Y + m_ChildSize.Y;
-		MoveLayoutFirstToEnd();
-	}
-	// 更新第一排的透明度
-	float fNewOpacity = FMath::Cos(containerPosition.Y / m_ChildSize.Y * 0.5f * PI);
-	fNewOpacity = fNewOpacity * fNewOpacity;
-	for (auto pChild : m_ItemChildren) {
-		if (pChild->m_nRowIndex == 0) {
-			pChild->SetRenderOpacity(fNewOpacity);
+		for (int32 i = ContainerPanel->GetChildrenCount() -1; i >=0; i--) {
+			ULoopViewItemWidget* pChild = Cast<ULoopViewItemWidget>(ContainerPanel->GetChildAt(i));
+			UCanvasPanelSlot* pChildSlot = Cast<UCanvasPanelSlot>(pChild->Slot);
+			FVector2D childPosition = pChildSlot->GetPosition();
+			if (childPosition.Y < -m_ChildSize.Y*2 -0.0001f) {
+				ContainerPanel->RemoveChildAt(i);
+			}
 		}
+		for (int32 i = 0; i < ContainerPanel->GetChildrenCount(); i++) {
+			ULoopViewItemWidget* pChild = Cast<ULoopViewItemWidget>(ContainerPanel->GetChildAt(i));
+			UCanvasPanelSlot* pChildSlot = Cast<UCanvasPanelSlot>(pChild->Slot);
+			FVector2D childPosition = pChildSlot->GetPosition();
+			childPosition.Y -= m_ChildSize.Y;
+			pChildSlot->SetPosition(childPosition);
+		}
+
+		m_NodeMatrix.RemoveAt(0);
+		TArray<int32> newRow;
+		newRow.AddZeroed(m_nColumnNum);
+		m_NodeMatrix.Add(newRow);
+		FilllMatrix();
 	}
 	pContainerSlot->SetPosition(containerPosition);
 }
@@ -134,15 +144,15 @@ void ULoopViewWidget::EndLoop()
 	m_LoopAnimationData.Stop();
 }
 
-ULoopViewItemWidget* ULoopViewWidget::CreateChild()
+ULoopViewItemWidget* ULoopViewWidget::CreateChild(int32 nRow, int32 nCol)
 {
-	if (GEngine) {
-		APlayerController* pController = GEngine->GetFirstLocalPlayerController(GetWorld());
-		ULoopViewItemWidget* newItem = CreateWidget<ULoopViewItemWidget>(pController, ChildWidgetClass);
-		ContainerPanel->AddChild(newItem);
-		UCanvasPanelSlot* pChildSlot = Cast<UCanvasPanelSlot>(newItem->Slot);
-		pChildSlot->SetSize(m_ChildSize);
-		return newItem;
-	}
-	return nullptr;
+	ULoopViewItemWidget* newItem = CreateWidget<ULoopViewItemWidget>(GetOwningPlayer(), ChildWidgetClass);
+	ContainerPanel->AddChild(newItem);
+	UCanvasPanelSlot* pChildSlot = Cast<UCanvasPanelSlot>(newItem->Slot);
+	pChildSlot->SetSize(m_ChildSize);
+	pChildSlot->SetPosition(FVector2D(nCol * m_ChildSize.X, nRow * m_ChildSize.Y));
+	newItem->m_nRowIndex = nRow;
+	newItem->m_nColIndex = nCol;
+	newItem->OnItemClicked().BindUObject(this,&ULoopViewWidget::HandleItemClicked);
+	return newItem;
 }

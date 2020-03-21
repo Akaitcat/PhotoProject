@@ -9,9 +9,7 @@
 
 void UMainViewWidget::NativeConstruct()
 {
-	TArray<UObject*> dataArray = FDataManager::GetInstance().GetAllData();
-	LoopView1->InitData(dataArray);
-	LoopView1->BeginLoop(1.0f);
+	ReInit();
 	Super::NativeConstruct();
 }
 
@@ -24,4 +22,11 @@ void UMainViewWidget::NativeTick(const FGeometry& InGeometry, float fDeltaTime)
 			OnIdleOver();
 		}
 	}
+}
+
+void UMainViewWidget::ReInit()
+{
+	TArray<UObject*> dataArray = FDataManager::GetInstance().GetAllData();
+	LoopView1->InitData(dataArray);
+	LoopView1->BeginLoop(1.0f);
 }

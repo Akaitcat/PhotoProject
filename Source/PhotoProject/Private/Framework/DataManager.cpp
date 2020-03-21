@@ -34,7 +34,6 @@ FDataManager& FDataManager::GetInstance()
 
 FDataManager::FDataManager()
 {
-
 }
 
 TArray<UObject*> FDataManager::GetTestData()
@@ -95,9 +94,11 @@ TArray<UObject*> FDataManager::LoadData(const TCHAR* szYear)
 			UPersonData* newData = NewObject<UPersonData>();
 			newData->m_strDirectoryName = strDirectory;
 			FString strDiectoryName;
+			FString strIndex;
 			strDirectory.Split(TEXT("/"), nullptr, &strDiectoryName, ESearchCase::IgnoreCase, ESearchDir::FromEnd);
-			strDiectoryName.Split(TEXT("_"), &newData->m_strIndex, &strDiectoryName);
+			strDiectoryName.Split(TEXT("_"), &strIndex, &strDiectoryName);
 			strDiectoryName.Split(TEXT("_"), &newData->m_strName, &newData->m_strSearchKey);
+			newData->m_nIndex = FCString::Atoi(*strIndex);
 			if (platformFile.IterateDirectory(*strDirectory, personVisitor))
 			{
 				for (const FString& strFilePath : personVisitor.m_FilePaths) {
@@ -107,7 +108,6 @@ TArray<UObject*> FDataManager::LoadData(const TCHAR* szYear)
 						TArray<uint8> buffer;
 						FFileHelper::LoadFileToArray(buffer, *strFilePath);
 						buffer.AddZeroed(1);
-						UE_LOG(LogTemp,Log,TEXT("strDiectoryName:%s"), *newData->m_strIndex);
 						newData->m_strDescription = GB2312_TO_UTF8(buffer);
 					}
 					else if (strFileName.EndsWith(TEXT(".jpg"), ESearchCase::IgnoreCase)
@@ -120,7 +120,7 @@ TArray<UObject*> FDataManager::LoadData(const TCHAR* szYear)
 							//newData->m_pPhoto = FImageUtils::ImportFileAsTexture2D(strFilePath);
 						}
 					}
-					else if (strFileName.EndsWith(TEXT(".mp4"), ESearchCase::IgnoreCase)) {
+					else if (strFileName.EndsWith(TEXT(".mp4"), ESearchCase::IgnoreCase) || strFileName.EndsWith(TEXT(".avi"), ESearchCase::IgnoreCase)) {
 						newData->m_strLocalVideoPath = strFilePath;
 					}
 				}
@@ -128,7 +128,10 @@ TArray<UObject*> FDataManager::LoadData(const TCHAR* szYear)
 			personDataArray.Add(newData);
 		}
 	}
-	personDataArray.Sort();
+	personDataArray.Sort([](const UObject& one, const UObject& other)
+		{
+			return ((UPersonData&)one).m_nIndex < ((UPersonData&)other).m_nIndex;
+		});
 	return personDataArray;
 }
 

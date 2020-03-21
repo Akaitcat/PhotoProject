@@ -62,11 +62,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "LoopViewWidget")
 	void EndLoop();
 	// LoopViewWidget Animation End
+protected:
+	UFUNCTION(BlueprintImplementableEvent, Category = "LoopViewWidget")
+	void HandleItemClicked(class ULoopViewItemWidget* pItem);
 
 private:
 
 	void InitChildrenItems();
-	void MoveLayoutFirstToEnd();
+	void FilllMatrix();
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "LoopViewWidget")
 	int32 m_nColumnNum;
@@ -79,12 +82,11 @@ protected:
 
 private:
 	UPROPERTY()
-	TArray<class ULoopViewItemWidget*> m_ItemChildren; 
-	UPROPERTY()
 	TArray<UObject*> m_DataArray;
-	class ULoopViewItemWidget* CreateChild();
+	class ULoopViewItemWidget* CreateChild(int32 nRow, int32 nCol);
 	FVector2D m_ContainerSize;
 	int32 m_ContainerChildNum;
-	int32 m_CurrentStartIndex;
 	FLoopAnimationData m_LoopAnimationData;
+	TArray<TArray<int32>> m_NodeMatrix;
+	int32 m_nCurrentDataIndex = 0;
 };

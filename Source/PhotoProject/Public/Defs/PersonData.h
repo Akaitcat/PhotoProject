@@ -15,7 +15,7 @@ class PHOTOPROJECT_API UPersonData : public UObject
 	GENERATED_BODY()
 public:
 	UPROPERTY(BlueprintReadWrite, Category = "PersonData")
-	FString m_strIndex;
+	int32 m_nIndex;
 	UPROPERTY(BlueprintReadWrite, Category = "PersonData")
 	FString m_strName;
 	UPROPERTY(BlueprintReadWrite, Category = "PersonData")
@@ -32,9 +32,9 @@ public:
 	FString m_strDescription;
 	UPROPERTY(BlueprintReadWrite, Category = "PersonData")
 	FString m_strSearchKey;
-	bool operator < (const UPersonData& other)
+	FORCEINLINE bool operator<(const UPersonData& other)const
 	{
-		return m_strIndex < other.m_strIndex;
+		return m_nIndex < other.m_nIndex;
 	}
 	bool operator == (const UPersonData& other)
 	{

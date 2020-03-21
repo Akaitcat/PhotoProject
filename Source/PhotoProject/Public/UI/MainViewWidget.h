@@ -19,6 +19,8 @@ public:
 protected:
 	UFUNCTION(BlueprintImplementableEvent, Category = "MainViewWidget")
 	void OnIdleOver();
+	UFUNCTION(BlueprintCallable, Category = "MainViewWidget")
+	void ReInit();
 protected:
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget), Category = "MainViewWidget")
 	class ULoopViewWidget* LoopView1;

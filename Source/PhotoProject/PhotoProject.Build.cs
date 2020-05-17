@@ -8,7 +8,7 @@ public class PhotoProject : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore" });
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "ImageWrapper" });
         PublicDependencyModuleNames.AddRange(new string[] { "UMG"});
 
         PrivateDependencyModuleNames.AddRange(new string[] {  });

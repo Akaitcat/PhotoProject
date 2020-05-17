@@ -26,4 +26,6 @@ private:
 public:
 	UPROPERTY(BlueprintReadWrite, Category = "UserSetting")
 	int32 m_nIntroduceFontSize;
+	UPROPERTY(BlueprintReadWrite, Category = "UserSetting")
+	float m_fStartVideoFrameTime;
 };

@@ -8,4 +8,5 @@ void UStartViewWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 	FDataManager::GetInstance().LoadAllData();
+	FDataManager::GetInstance().LoadStartVideoFrames();
 }

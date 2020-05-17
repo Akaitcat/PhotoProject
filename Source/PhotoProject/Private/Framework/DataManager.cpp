@@ -80,6 +80,32 @@ void FDataManager::LoadAllData()
 	m_DataMap.Add(TEXT("2020"), LoadData(TEXT("2020")));
 }
 
+TArray<UTexture2D*> FDataManager::LoadStartVideoFrames()
+{
+	static TArray<UTexture2D*> frames;
+	if (frames.Num() <= 0) {
+		frames.Reserve(100);
+		FString strRootDir = FPaths::ProjectDir();
+		strRootDir.PathAppend(TEXT("StartVideo"),10);
+		IPlatformFile& platformFile = FPlatformFileManager::Get().GetPlatformFile();
+		FMyDirectoryVisitor myVisitor;
+		if (platformFile.IterateDirectory(*strRootDir, myVisitor)) {
+			myVisitor.m_FilePaths.Sort([&](const FString& one, const FString& other)
+				{
+					return FCString::Atoi(*FPaths::GetBaseFilename(one)) < FCString::Atoi(*FPaths::GetBaseFilename(other));
+				});
+			for (const FString& texturePath : myVisitor.m_FilePaths) {
+				;
+				UTexture2D* texture = FImageUtils::ImportFileAsTexture2D(texturePath);
+				texture->AddToRoot();
+				if (texture) {
+					frames.Add(texture);
+				}
+			}
+		}
+	}
+	return frames;
+}
 TArray<UObject*> FDataManager::LoadData(const TCHAR* szYear)
 {
 	TArray<UObject*> personDataArray;
@@ -132,7 +158,7 @@ TArray<UObject*> FDataManager::LoadData(const TCHAR* szYear)
 		{
 			return ((UPersonData&)one).m_nIndex < ((UPersonData&)other).m_nIndex;
 		});
-	return personDataArray;
+	return MoveTemp(personDataArray);
 }
 
 FString FDataManager::GB2312_TO_UTF8(const TArray<uint8>& szGB2312)
